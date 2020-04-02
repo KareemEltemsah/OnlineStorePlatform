@@ -219,4 +219,13 @@ class UserController extends Controller
         $asoArr = array("username" => $_username);
         return $this->dataAccess->select($asoArr);
     }
+    public function methodExistsCheck($method)
+    {
+        if(!in_array($method, $this->controllersMethodsArr))
+        {
+            return false;
+        }
+
+        return method_exists($this, $method);
+    }
 }
