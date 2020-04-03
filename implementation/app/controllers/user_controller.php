@@ -1,39 +1,33 @@
 <?php
 class UserController extends Controller
 {
-	public function __construct($_parameters)
-	{
-		$this->parameters = $_parameters;
+    public function __construct($_parameters)
+    {
+        $this->parameters = $_parameters;
 
-		$this->model = new UserModel();
-		$this->view = new UserView();
-		$this->dataAccess = new UserDA(DatabaseConnector::getInstance()->getConnection());
-
-        // Fill the array with the names of the methods
-        $this->controllersMethodsArr = array();
-        $this->controllersMethodsArr[] = "login";
-        $this->controllersMethodsArr[] = "register";
-        $this->controllersMethodsArr[] = "getAllUsers";
-	}
+        $this->model = new UserModel();
+        $this->view = new UserView();
+        $this->dataAccess = new UserDA(DatabaseConnector::getInstance()->getConnection());
+    }
 
     public function login()
     {
-    	if(empty($this->parameters) || !isset($this->parameters) || !is_array($this->parameters))
+        if(empty($this->parameters) || !isset($this->parameters) || !is_array($this->parameters))
         {
-        	echo $this->view->exception();
-        	exit();
+            echo $this->view->exception();
+            exit();
         }
 
-    	if(!array_key_exists("email", $this->parameters))
+        if(!array_key_exists("email", $this->parameters))
         {
-        	echo $this->view->exception();
-        	exit();
+            echo $this->view->exception();
+            exit();
         }
 
         if(!array_key_exists("password", $this->parameters))
         {
-        	echo $this->view->exception();
-        	exit();
+            echo $this->view->exception();
+            exit();
         }
 
         $this->model->email = $this->parameters["email"];
@@ -45,33 +39,18 @@ class UserController extends Controller
 
         if($userData)
         {
-        	$this->model->accessToken = $userData["access_token"];
-        	echo $this->view->renderObject("access_token", $this->model->accessToken);
-		}
-		else
-		{
-			echo $this->view->fail();
-		}
-
-		exit();
-    }
-
-
-    function getAllUsers()
-    {
-        $data = $this->dataAccess->selectAll();
-
-        foreach ($data as $user) 
+            $this->model->accessToken = $userData["access_token"];
+            echo $this->view->renderObject("access_token", $this->model->accessToken);
+        }
+        else
         {
-            unset($user["password"]); 
-            unset($user["access_token"]); 
-            $users[] = $user;
+            echo $this->view->fail();
         }
 
-        echo $this->view->renderArray($users);
         exit();
     }
-    public function register()
+
+    public function create()
     {
         if(empty($this->parameters) || 
            !isset($this->parameters) || 
@@ -105,8 +84,7 @@ class UserController extends Controller
             exit();
         }
 
-        if(!array_key_exists("user_type", $this->parameters) || 
-            ($this->parameters["user_type"] != "buyer" AND $this->parameters["user_type"] != "store_owner") )
+        if(!array_key_exists("user_type", $this->parameters) || !UserType::isValidValue($this->parameters["user_type"]))
         {
             echo $this->view->exception();
             exit();
@@ -202,6 +180,21 @@ class UserController extends Controller
         exit();
     }
 
+    function getAll()
+    {
+        $data = $this->dataAccess->selectAll();
+
+        foreach ($data as $user) 
+        {
+            unset($user["password"]); 
+            unset($user["access_token"]); 
+            $users[] = $user;
+        }
+
+        echo $this->view->renderArray($users);
+        exit();
+    }
+
     private function phoneNumberExist($_phoneNumber) 
     {
         $asoArr = array("phone_number" => $_phoneNumber);
@@ -218,14 +211,5 @@ class UserController extends Controller
     {
         $asoArr = array("username" => $_username);
         return $this->dataAccess->select($asoArr);
-    }
-    public function methodExistsCheck($method)
-    {
-        if(!in_array($method, $this->controllersMethodsArr))
-        {
-            return false;
-        }
-
-        return method_exists($this, $method);
     }
 }
