@@ -45,4 +45,48 @@ class DataAccessObject
 
         	return $user;
 	}
+	
+	public function selectAll()
+	{
+		$query = "SELECT * FROM `" . $this->tableName;
+		
+        // If the query can't be executed (e.g: use of special characters in inputs)
+        if(!$result = $this->db->query($query)) 
+        {
+            return 0;
+        }
+
+        while ($data = $result->fetch_assoc())
+		{
+		    $arr[] = $data;
+		}
+
+        return $arr;
+	}
+
+	public function insert($_array)
+	{
+		//print_r(array_keys($_array));
+		//print_r($this->columns);
+		//echo $query;
+
+		if(array_keys($_array) != $this->columns)
+			return false;
+
+		$query = sprintf("INSERT INTO `" . $this->tableName . "` (%s) VALUES (\"%s\")", 
+						implode(',',array_keys($_array)),
+						implode('","',array_values($_array)));
+
+        return $this->db->query($query);
+	}	
+
+	public function getTableName()
+	{
+		return $this->tableName;
+	}
+
+	public function getColumns()
+	{
+		return $this->columns;
+	}
 }
